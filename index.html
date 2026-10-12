@@ -6,7 +6,7 @@
     <title>Incremental Font Transfer (IFT) — Roboto Demo</title>
     <meta
       name="description"
-      content="Demonstration of W3C Incremental Font Transfer (IFT) using Roboto served from Google Fonts with a distinct fallback font."
+      content="Demonstration of W3C Incremental Font Transfer (IFT) using Roboto from Google Fonts with a distinct fallback font."
     />
 
     <!-- Experimental Google Fonts endpoint serving Roboto with tech(incremental) -->
@@ -18,13 +18,12 @@
 
     <style>
       /*
-       * Shadow any locally installed OS "Roboto" system font.
-       * When the browser does not yet support `tech(incremental)`, the `@font-face` rule
-       * from Google Fonts is dropped by the CSS parser. Without at least one valid `@font-face`
-       * rule for "Roboto", the browser would treat "Roboto" as a system font name and use the
-       * OS-installed Roboto instead of our fallback font.
-       * Scoping this sentinel rule to the non-character U+FFFE registers "Roboto" as a web font
-       * family so unsupported `tech(incremental)` falls straight through to `--fallback-font`.
+       * Sentinel @font-face:
+       * Shadows any locally installed OS "Roboto" font.
+       * When tech(incremental) is not supported by the browser engine, the Google Fonts
+       * @font-face is dropped. This sentinel ensures "Roboto" remains registered as a web
+       * font (with no printable glyphs in U+FFFE), forcing the browser to fall through
+       * to the fallback font instead of using the local OS system font.
        */
       @font-face {
         font-family: "Roboto";
@@ -35,24 +34,27 @@
         unicode-range: U+FFFE;
       }
 
+      /* Distinct fallback font: Courier New / monospace is fixed-width with slab serifs */
       :root {
-        --bg-page: #f8f9fa;
+        --bg-page: #f6f8fa;
         --bg-surface: #ffffff;
-        --bg-subtle: #f1f3f4;
-        --text-primary: #202124;
-        --text-secondary: #5f6368;
-        --border-color: #dadce0;
-        --accent-blue: #1a73e8;
-        --accent-blue-hover: #1557b0;
-        --accent-blue-subtle: #e8f0fe;
+        --bg-subtle: #f1f3f5;
+        --border-color: #d0d7de;
+        --border-accent: #0969da;
+        --text-primary: #1f2328;
+        --text-secondary: #656d76;
+        --text-muted: #8c959f;
 
-        /*
-         * Distinct fallback stack: Courier New / monospace is fixed-width with slab serifs,
-         * making it immediately obvious whether proportional sans-serif "Roboto" (IFT) loaded
-         * or if the browser fell back due to missing tech(incremental) support.
-         */
-        --fallback-font: "Courier New", Courier, monospace;
-        --demo-font-stack: "Roboto", var(--fallback-font);
+        --color-blue: #0969da;
+        --color-blue-subtle: #ddf4ff;
+        --color-amber: #9a6700;
+        --color-amber-subtle: #fff8c5;
+        --color-green: #1a7f37;
+        --color-green-subtle: #dafbe1;
+
+        --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+        --font-fallback: "Courier New", Courier, monospace;
+        --font-under-test: "Roboto", var(--font-fallback);
       }
 
       * {
@@ -63,83 +65,21 @@
         margin: 0;
         background-color: var(--bg-page);
         color: var(--text-primary);
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family: var(--font-ui);
         line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
       }
 
-      .layout {
-        max-width: 1240px;
+      /* Header */
+      header {
+        background: var(--bg-surface);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1rem 1.5rem;
+      }
+
+      .header-inner {
+        max-width: 1200px;
         margin: 0 auto;
-        padding: 1.5rem;
-        display: flex;
-        gap: 1.5rem;
-        align-items: flex-start;
-      }
-
-      /* Left navigation sidebar inspired by garretrieger/ift-demo */
-      .jump {
-        width: 260px;
-        flex-shrink: 0;
-        background: var(--bg-surface);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 1.25rem;
-        position: sticky;
-        top: 1.5rem;
-      }
-
-      .jump h2 {
-        margin: 0 0 0.75rem 0;
-        font-size: 0.95rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--text-secondary);
-      }
-
-      .jump ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-
-      .jump li + li {
-        margin-top: 0.35rem;
-      }
-
-      .jump a {
-        display: block;
-        padding: 0.5rem 0.65rem;
-        border-radius: 6px;
-        color: var(--text-primary);
-        text-decoration: none;
-        font-size: 0.925rem;
-        transition: background-color 0.15s ease, color 0.15s ease;
-      }
-
-      .jump a:hover {
-        background-color: var(--bg-subtle);
-      }
-
-      .jump a.active {
-        background-color: var(--accent-blue-subtle);
-        color: var(--accent-blue);
-        font-weight: 600;
-      }
-
-      main {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-      }
-
-      /* Top controls bar */
-      .controls {
-        background: var(--bg-surface);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 1rem 1.25rem;
         display: flex;
         flex-wrap: wrap;
         align-items: center;
@@ -147,457 +87,795 @@
         gap: 1rem;
       }
 
-      .nav-buttons {
+      .header-title h1 {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 700;
         display: flex;
         align-items: center;
-        gap: 0.6rem;
+        gap: 0.5rem;
       }
 
-      button {
-        font-family: inherit;
-        font-size: 0.95rem;
-        font-weight: 500;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
+      .header-title p {
+        margin: 0.25rem 0 0 0;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+      }
+
+      .endpoint-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+        background: var(--bg-subtle);
         border: 1px solid var(--border-color);
-        background-color: var(--bg-surface);
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        color: var(--text-secondary);
+      }
+
+      .endpoint-pill code {
+        color: var(--color-blue);
+        font-weight: 600;
+        font-size: 0.85em;
+      }
+
+      /* Main container layout */
+      .layout {
+        max-width: 1200px;
+        margin: 1.5rem auto;
+        padding: 0 1.5rem 2rem 1.5rem;
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 1.5rem;
+        align-items: start;
+      }
+
+      /* Sidebar Navigation */
+      .sidebar {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        position: sticky;
+        top: 1.5rem;
+      }
+
+      .sidebar h2 {
+        margin: 0 0 0.75rem 0;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+      }
+
+      .sample-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      .sample-btn {
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 0.6rem 0.75rem;
+        font-family: inherit;
+        font-size: 0.9rem;
         color: var(--text-primary);
         cursor: pointer;
-        transition: background-color 0.15s ease, border-color 0.15s ease;
+        transition: all 0.15s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
       }
 
-      button:hover:not(:disabled) {
+      .sample-btn:hover {
         background-color: var(--bg-subtle);
       }
 
-      button.primary {
-        background-color: var(--accent-blue);
-        border-color: var(--accent-blue);
+      .sample-btn.active {
+        background-color: var(--color-blue-subtle);
+        border-color: var(--color-blue);
+        color: var(--color-blue);
+        font-weight: 600;
+      }
+
+      .sample-btn .sample-num {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+
+      .sample-btn.active .sample-num {
+        color: var(--color-blue);
+      }
+
+      /* Main Content Area */
+      .content-pane {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+      }
+
+      /* Top Stepper Controls */
+      .toolbar {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+
+      .stepper {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      button.ctrl-btn {
+        font-family: inherit;
+        font-size: 0.875rem;
+        font-weight: 500;
+        padding: 0.45rem 0.85rem;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-surface);
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      button.ctrl-btn:hover:not(:disabled) {
+        background: var(--bg-subtle);
+      }
+
+      button.ctrl-btn.primary {
+        background: var(--color-blue);
+        border-color: var(--color-blue);
         color: #ffffff;
       }
 
-      button.primary:hover:not(:disabled) {
-        background-color: var(--accent-blue-hover);
+      button.ctrl-btn.primary:hover:not(:disabled) {
+        opacity: 0.9;
       }
 
-      button:disabled {
-        opacity: 0.45;
+      button.ctrl-btn:disabled {
+        opacity: 0.4;
         cursor: not-allowed;
       }
 
-      .font-status-banner {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
+      /* Font Mode Switcher */
+      .font-toggle-group {
+        display: flex;
+        align-items: center;
         background: var(--bg-subtle);
-        padding: 0.45rem 0.75rem;
+        padding: 0.2rem;
         border-radius: 6px;
+        border: 1px solid var(--border-color);
+        gap: 0.2rem;
+      }
+
+      .toggle-option {
+        font-size: 0.8rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 4px;
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-family: inherit;
+        font-weight: 500;
+        transition: all 0.15s ease;
+      }
+
+      .toggle-option.active {
+        background: var(--bg-surface);
+        color: var(--color-blue);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+        font-weight: 600;
+      }
+
+      /* Context & Explanation Box */
+      .info-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-left: 4px solid var(--color-blue);
+        border-radius: 6px;
+        padding: 1rem 1.25rem;
+      }
+
+      .info-header {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-blue);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-bottom: 0.4rem;
+      }
+
+      .info-body {
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        line-height: 1.55;
+      }
+
+      .info-body p {
+        margin: 0.4rem 0;
+      }
+
+      /* ====================================================================
+         PROMINENT DEMO SPECIMEN STAGE
+         This is unmistakably framed as the text being rendered under test
+         ==================================================================== */
+      .specimen-stage {
+        background: var(--bg-surface);
+        border: 2px solid var(--border-accent);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 14px rgba(9, 105, 218, 0.08);
+      }
+
+      .stage-header {
+        background: #f0f7ff;
+        border-bottom: 1px solid #d0e7ff;
+        padding: 0.75rem 1.25rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+
+      .stage-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .stage-badge {
+        background: var(--color-blue);
+        color: #ffffff;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.2rem 0.55rem;
+        border-radius: 4px;
+      }
+
+      .stage-heading {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #0c2d6b;
+      }
+
+      .active-font-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.25rem 0.65rem;
+        border-radius: 999px;
+      }
+
+      .indicator-fallback {
+        background: var(--color-amber-subtle);
+        color: var(--color-amber);
+        border: 1px solid #d4a72c;
+      }
+
+      .indicator-ift {
+        background: var(--color-green-subtle);
+        color: var(--color-green);
+        border: 1px solid #4ac26b;
+      }
+
+      .indicator-forced {
+        background: #f1f3f5;
+        color: var(--text-secondary);
         border: 1px solid var(--border-color);
       }
 
-      .font-status-banner code {
-        font-family: "Courier New", Courier, monospace;
-        font-weight: 600;
-        color: var(--text-primary);
+      /* Inside the Specimen Stage */
+      .stage-body {
+        padding: 2rem 2.25rem;
       }
 
-      /* Content + Metrics split area */
-      .text_and_metrics {
+      .specimen-section {
+        margin-bottom: 2rem;
+      }
+
+      .specimen-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .specimen-label-row {
         display: flex;
-        gap: 1rem;
-        align-items: stretch;
-        min-height: 480px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.65rem;
+        border-bottom: 1px dashed var(--border-color);
+        padding-bottom: 0.35rem;
       }
 
-      .sample_text {
-        flex: 2;
+      .specimen-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+      }
+
+      .specimen-tag {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        background: var(--bg-subtle);
+        padding: 0.15rem 0.45rem;
+        border-radius: 4px;
+        font-family: var(--font-fallback);
+      }
+
+      /* The actual specimen text container */
+      .specimen-text {
+        color: #111418;
+      }
+
+      /* Font class applied to specimen */
+      .font-mode-ift {
+        font-family: var(--font-under-test);
+      }
+
+      .font-mode-fallback {
+        font-family: var(--font-fallback) !important;
+      }
+
+      .font-mode-system-roboto {
+        font-family: Roboto, sans-serif !important;
+      }
+
+      /* Specimen Typography sizes */
+      h2.specimen-title {
+        font-size: 2.25rem;
+        line-height: 1.3;
+        margin: 0;
+        word-break: break-word;
+      }
+
+      div.specimen-paragraph {
+        font-size: 1.35rem;
+        line-height: 1.75;
+        word-break: break-word;
+      }
+
+      /* Highlights for target characters */
+      .highlight-target {
+        background: #fff3c4;
+        border-bottom: 2px solid #e3b341;
+        padding: 0 0.15em;
+        border-radius: 2px;
+      }
+
+      /* Metrics Box */
+      .metrics-card {
         background: var(--bg-surface);
         border: 1px solid var(--border-color);
         border-radius: 8px;
-        padding: 2rem;
+        padding: 1.25rem;
+        font-size: 0.875rem;
       }
 
-      .type-badge {
-        display: inline-block;
-        font-size: 0.8rem;
-        font-weight: 600;
+      .metrics-card h3 {
+        margin: 0 0 0.75rem 0;
+        font-size: 0.85rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         color: var(--text-secondary);
-        margin-bottom: 1rem;
       }
 
-      /* The IFT Roboto specimen text area with distinct fallback */
-      .ift-specimen {
-        font-family: var(--demo-font-stack);
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
       }
 
-      h1.ift-specimen {
-        font-size: 2.6rem;
-        line-height: 1.25;
-        font-weight: 100;
-        margin: 0 0 1.25rem 0;
+      .metric-box {
+        background: var(--bg-subtle);
+        border-radius: 6px;
+        padding: 0.75rem 1rem;
       }
 
-      div.ift-specimen {
-        font-size: 1.35rem;
-        line-height: 1.65;
+      .metric-title {
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
       }
 
-      /* Intro styles */
-      #intro h1 {
-        margin-top: 0;
-        font-size: 2rem;
-      }
-
-      #intro p,
-      #intro li {
+      .metric-value {
+        font-weight: 700;
+        font-size: 1.05rem;
         color: var(--text-primary);
-        font-size: 1rem;
-        line-height: 1.6;
       }
 
-      #intro code {
-        background: var(--bg-subtle);
-        padding: 0.15rem 0.35rem;
-        border-radius: 4px;
-        font-size: 0.9em;
+      .metric-sub {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 0.2rem;
       }
 
-      .fallback-preview-box {
-        margin-top: 1.25rem;
-        padding: 1rem 1.25rem;
-        background: var(--bg-subtle);
-        border-left: 4px solid var(--accent-blue);
-        border-radius: 4px;
-      }
-
-      .fallback-preview-sample {
-        font-family: var(--fallback-font);
-        font-size: 1.15rem;
-        margin-top: 0.4rem;
-      }
-
-      /* Metrics sidebar */
-      .metrics {
-        flex: 1;
-        background: var(--bg-surface);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 1.5rem;
-      }
-
-      .metrics h3 {
-        margin: 0 0 1rem 0;
-        font-size: 1rem;
-      }
-
-      .metric-item {
-        margin-bottom: 1.25rem;
-      }
-
-      .metric-label {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        margin-bottom: 0.35rem;
-      }
-
-      .bar-track {
-        width: 100%;
-        background: var(--bg-subtle);
-        border-radius: 4px;
-        overflow: hidden;
-        height: 28px;
-      }
-
-      .bar {
-        background-color: var(--accent-blue);
-        color: #ffffff;
-        font-size: 0.85rem;
-        font-weight: 600;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        padding: 0 0.6rem;
-        white-space: nowrap;
-        transition: width 0.25s ease;
-        min-width: 4rem;
-      }
-
-      .meta-list {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        border-top: 1px solid var(--border-color);
-        padding-top: 1rem;
-        margin-top: 1rem;
-      }
-
-      .meta-list div + div {
-        margin-top: 0.5rem;
-      }
-
-      .hide {
-        display: none;
-      }
-
-      @media (max-width: 900px) {
+      @media (max-width: 860px) {
         .layout {
-          flex-direction: column;
+          grid-template-columns: 1fr;
         }
-        .jump {
-          width: 100%;
+        .sidebar {
           position: static;
         }
-        .text_and_metrics {
-          flex-direction: column;
+        .stage-body {
+          padding: 1.25rem;
+        }
+        h2.specimen-title {
+          font-size: 1.65rem;
+        }
+        div.specimen-paragraph {
+          font-size: 1.15rem;
         }
       }
     </style>
   </head>
   <body>
+    <!-- Top Header -->
+    <header>
+      <div class="header-inner">
+        <div class="header-title">
+          <h1><span>🔤</span> Incremental Font Transfer (IFT) — Roboto Demo</h1>
+          <p>Specimen text from the original W3C IFT demo, testing Google Fonts IFT serving</p>
+        </div>
+        <div class="endpoint-pill" title="Experimental Google Fonts IFT CSS endpoint">
+          <span>Endpoint:</span>
+          <code>fonts.sandbox.google.com/...&amp;is_ift=true</code>
+        </div>
+      </div>
+    </header>
+
     <div class="layout">
-      <nav class="jump" aria-label="Sample text navigation">
-        <h2>Jump to</h2>
-        <ul>
-          <li><a href="#" id="to-intro" class="active">Overview</a></li>
-          <li><a href="#" id="to-latin">1. Basic Latin</a></li>
-          <li><a href="#" id="to-vietnamese">2. Vietnamese</a></li>
-          <li><a href="#" id="to-cyr-greek">3. Cyrillic + Greek</a></li>
-          <li><a href="#" id="to-cyr-kerning">4. Cyrillic Kerning</a></li>
-          <li><a href="#" id="to-small-caps">5. Small Caps</a></li>
-          <li><a href="#" id="to-width">6. Design Space Augmentation</a></li>
+      <!-- Left Sidebar: Samples List -->
+      <nav class="sidebar" aria-label="Demo Samples">
+        <h2>Roboto Test Samples</h2>
+        <ul class="sample-list">
+          <li>
+            <button type="button" class="sample-btn active" data-index="0">
+              <span class="sample-num">Sample 1</span>
+              <span>Basic Latin</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="sample-btn" data-index="1">
+              <span class="sample-num">Sample 2</span>
+              <span>Vietnamese Diacritics</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="sample-btn" data-index="2">
+              <span class="sample-num">Sample 3</span>
+              <span>Cyrillic + Greek</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="sample-btn" data-index="3">
+              <span class="sample-num">Sample 4</span>
+              <span>Cyrillic Kerning</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="sample-btn" data-index="4">
+              <span class="sample-num">Sample 5</span>
+              <span>Small Caps (c2sc, smcp)</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="sample-btn" data-index="5">
+              <span class="sample-num">Sample 6</span>
+              <span>Variable Design Space</span>
+            </button>
+          </li>
         </ul>
       </nav>
 
-      <main>
-        <div class="controls">
-          <div class="nav-buttons">
-            <button type="button" id="prev" disabled>Previous Text Sample</button>
-            <button type="button" id="next" class="primary">Next Text Sample</button>
+      <!-- Main Content Area -->
+      <main class="content-pane">
+        <!-- Toolbar: Navigation & Font Switcher -->
+        <div class="toolbar">
+          <div class="stepper">
+            <button type="button" class="ctrl-btn" id="prev-btn" disabled>◄ Previous Sample</button>
+            <button type="button" class="ctrl-btn primary" id="next-btn">Next Sample ►</button>
+            <span id="sample-counter" style="font-size: 0.85rem; color: var(--text-secondary); margin-left: 0.5rem;">
+              1 of 6
+            </span>
           </div>
-          <div class="font-status-banner">
-            Font stack: <code>font-family: "Roboto", "Courier New", Courier, monospace</code>
+
+          <!-- Font mode toggle to inspect rendering differences -->
+          <div class="font-toggle-group" title="Switch font rendering mode to clearly see the fallback vs Roboto">
+            <button type="button" class="toggle-option active" data-mode="ift">
+              Tested Stack (Roboto → Fallback)
+            </button>
+            <button type="button" class="toggle-option" data-mode="fallback">
+              Force Courier New (Fallback)
+            </button>
+            <button type="button" class="toggle-option" data-mode="system">
+              Force System Roboto
+            </button>
           </div>
         </div>
 
-        <div class="text_and_metrics">
-          <!-- Intro Panel -->
-          <div id="intro" class="sample_text">
-            <div class="type-badge">Introduction</div>
-            <h1>Incremental Font Transfer Demo (Roboto)</h1>
-            <p>
-              This page demonstrates <strong>Incremental Font Transfer (IFT)</strong> using the
-              <strong>Roboto</strong> sample texts from
-              <a href="https://github.com/garretrieger/ift-demo" target="_blank" rel="noopener">garretrieger/ift-demo</a>.
-            </p>
-            <p>
-              The font is requested directly from Google Fonts' experimental IFT endpoint:
-              <br />
-              <code>https://fonts.sandbox.google.com/css2?family=Roboto&amp;is_ift=true</code>
-            </p>
-            <p>
-              When requested by a modern browser, Google Fonts serves an <code>@font-face</code> rule with
-              <code>src: url(...) format('woff2') tech(incremental)</code>.
-            </p>
-            <div class="fallback-preview-box">
-              <strong>Distinct Fallback Font Indicator:</strong>
-              <p style="margin: 0.35rem 0 0 0;">
-                The sample text uses <code>"Courier New", Courier, monospace</code> (a fixed-width slab-serif font)
-                as its fallback behind <code>"Roboto"</code>. While browser support for <code>tech(incremental)</code>
-                is not active, text renders in this unmistakable monospaced serif fallback; once IFT loads
-                <code>Roboto</code>, it switches to Roboto's clean proportional sans-serif glyphs:
-              </p>
-              <div class="fallback-preview-sample">
-                Fallback preview: The quick brown fox jumps over the lazy dog.
-              </div>
-            </div>
-            <p style="margin-top: 1.25rem;"><strong>Instructions:</strong></p>
-            <ul>
-              <li>
-                Use <strong>Next Text Sample</strong> / <strong>Previous Text Sample</strong> or the
-                <strong>Jump to</strong> links on the left to step through the 6 Roboto samples.
-              </li>
-              <li>
-                Each sample exercises a different aspect of IFT: basic Latin, Vietnamese diacritics &amp; cross-subset
-                kerning, Cyrillic + Greek, punctuation kerning, optional layout features (<code>c2sc</code> /
-                <code>smcp</code>), and variable design-space augmentation (<code>wdth</code> &amp; <code>wght</code>).
-              </li>
-            </ul>
+        <!-- Explanatory Context Box (Rendered in Standard UI font) -->
+        <div class="info-card">
+          <div class="info-header">
+            <span>ℹ️</span>
+            <span id="info-header-title">About Sample 1: Basic Latin</span>
           </div>
-
-          <!-- IFT Sample Text Panel -->
-          <div id="ift_sample" class="sample_text hide">
-            <div id="sample_label" class="type-badge">Incremental Font Transfer — Roboto</div>
-            <h1 id="title_ift" class="ift-specimen"></h1>
-            <div id="paragraph_ift" class="ift-specimen"></div>
+          <div class="info-body" id="info-explanation">
+            <!-- Dynamically populated explanation -->
           </div>
-
-          <!-- Metrics Panel -->
-          <aside class="metrics">
-            <h3>Font Transfer Metrics</h3>
-            <div class="metric-item">
-              <div class="metric-label">Google Fonts bytes transferred:</div>
-              <div class="bar-track">
-                <div id="ift_bar" class="bar" style="width: 0%;">0 kb</div>
-              </div>
-            </div>
-            <div class="meta-list">
-              <div><strong>Active Font Family:</strong> <code>"Roboto"</code></div>
-              <div><strong>Fallback Family:</strong> <code>"Courier New", monospace</code></div>
-              <div id="sample_meta"><strong>Current View:</strong> Overview</div>
-            </div>
-          </aside>
         </div>
+
+        <!-- ==========================================================
+             THE LIVE DEMO SPECIMEN STAGE
+             This container is explicitly framed so it is crystal clear
+             that the text inside is the live demo specimen under test.
+             ========================================================== -->
+        <section class="specimen-stage" aria-label="Demo Specimen Stage">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-badge">Live Demo Specimen</span>
+              <span class="stage-heading" id="specimen-heading-title">Sample 1: Basic Latin</span>
+            </div>
+            <div id="font-status-indicator" class="active-font-indicator indicator-fallback">
+              <span>●</span>
+              <span id="font-status-text">Detecting active font...</span>
+            </div>
+          </div>
+
+          <div class="stage-body">
+            <!-- Specimen Title Area -->
+            <div class="specimen-section">
+              <div class="specimen-label-row">
+                <span class="specimen-label">Specimen Headline</span>
+                <span class="specimen-tag" id="title-tag">font-weight: 100</span>
+              </div>
+              <h2 id="demo-title" class="specimen-title specimen-text font-mode-ift">
+                <!-- Title inserted here -->
+              </h2>
+            </div>
+
+            <!-- Specimen Paragraph Area -->
+            <div class="specimen-section">
+              <div class="specimen-label-row">
+                <span class="specimen-label">Specimen Body Text</span>
+                <span class="specimen-tag" id="paragraph-tag">font-weight: 400</span>
+              </div>
+              <div id="demo-paragraph" class="specimen-paragraph specimen-text font-mode-ift">
+                <!-- Paragraph text inserted here -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Technical Details & Transfer Metrics -->
+        <aside class="metrics-card">
+          <h3>Diagnostic &amp; Network Info</h3>
+          <div class="metrics-grid">
+            <div class="metric-box">
+              <div class="metric-title">Target Web Font</div>
+              <div class="metric-value">Roboto (tech(incremental))</div>
+              <div class="metric-sub">Via Google Fonts Sandbox endpoint</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-title">Browser IFT Support</div>
+              <div class="metric-value" id="browser-support-val">Checking...</div>
+              <div class="metric-sub"><code>CSS.supports("font-tech(incremental)")</code></div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-title">Currently Rendered As</div>
+              <div class="metric-value" id="rendered-as-val">Courier New (Fallback)</div>
+              <div class="metric-sub">Measured via canvas font-width ratio</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-title">Font Bytes Transferred</div>
+              <div class="metric-value" id="transfer-val">0 KB</div>
+              <div class="metric-sub">Observed via PerformanceObserver</div>
+            </div>
+          </div>
+        </aside>
       </main>
     </div>
 
     <script>
-      // Roboto-only sample texts taken from garretrieger/ift-demo/docs/sample-texts.json
+      // The 6 Roboto-only samples with separated specimen text vs test commentary
       const ROBOTO_SAMPLES = [
         {
-          label: "Sample 1 of 6 — Basic Latin",
-          navId: "to-latin",
-          title:
-            '<span style="font-weight: 100;">In this first sample only basic latin support is loaded.</span>',
-          paragraph: [
-            '<span style="font-weight: 400;">',
-            "A peep at some distant orb has power to raise and purify our ",
-            "thoughts like a strain of sacred music, or a noble picture, or a passage from the ",
-            "grander poets. It always does one good.",
-            "</span>"
-          ]
+          name: "Basic Latin",
+          explanation: `
+            <p><strong>Initial Font Baseline:</strong> In this first sample, only basic Latin characters are needed. In an IFT deployment, the browser receives a small initial base font containing core Latin glyphs and table maps.</p>
+            <p>Because browser engine support for <code>tech(incremental)</code> is not yet active, the text below renders in our distinct <strong>Courier New (monospace slab-serif) fallback</strong>. When IFT is supported, it seamlessly upgrades to Roboto's thin (100) and regular (400) proportional sans-serif.</p>
+          `,
+          titleHtml: '<span style="font-weight: 100;">In this first sample only basic latin support is loaded.</span>',
+          titleTag: "weight: 100",
+          paragraphHtml: `
+            <span style="font-weight: 400;">
+              A peep at some distant orb has power to raise and purify our thoughts like a strain of sacred music, or a noble picture, or a passage from the grander poets. It always does one good.
+            </span>
+          `,
+          paragraphTag: "weight: 400"
         },
         {
-          label: "Sample 2 of 6 — Vietnamese",
-          navId: "to-vietnamese",
-          title:
-            '<span style="font-weight: 100;">Bầu trời trong xanh thăm thẳm, không một gợn mây.</span>',
-          paragraph: [
-            '<span style="font-weight: 400;">',
-            "Here we augment the font to add support for vietnamese. ",
-            "Notice that the characters ộ and ậ don't render correctly with unicode range. ",
-            "This happens due to splitting of interacting codepoints between unicode range subsets. ",
-            "Likewise the kerning is different versus the unicode range implementation. This is because unicode ",
-            "range breaks kerning between latin and vietnamese characters.<br/><br/>",
-            "Phải áp dụng chế độ giáo dục miễn phí, ít nhất là ở bậc tiểu học và giáo dục cơ sở",
-            "<br/><br/>",
-            "Chúng tôi đã đạt tới độ cao rất lớn trong khí quyển ",
-            "vì bầu trời tối đen và các vì sao không còn lấp lánh. Ảo giác về đường chân trời khiến ",
-            "đám mây ảm đạm bên dưới lõm xuống và chiếc xe như trôi bồng bềnh giữa quả cầu khổng lồ ",
-            "tăm tối.",
-            "</span>"
-          ]
+          name: "Vietnamese Diacritics",
+          explanation: `
+            <p><strong>Cross-Subset Kerning &amp; Composed Characters:</strong> Vietnamese relies heavily on stacked diacritics (like <mark class="highlight-target">ộ</mark> and <mark class="highlight-target">ậ</mark>). With traditional <code>unicode-range</code> slicing, interacting codepoints often split across arbitrary subsets, causing broken diacritics and missing kerning between Latin and Vietnamese characters.</p>
+            <p>IFT solves this by extending the existing font binary with a patch, maintaining full OpenType functional equivalence without broken kerning.</p>
+          `,
+          titleHtml: '<span style="font-weight: 100;">Bầu trời trong xanh thăm thẳm, không một gợn mây.</span>',
+          titleTag: "weight: 100 · Vietnamese",
+          paragraphHtml: `
+            <span style="font-weight: 400;">
+              Phải áp dụng chế độ giáo dục miễn phí, ít nhất là ở bậc tiểu học và giáo dục cơ sở.<br/><br/>
+              Chúng tôi đã đạt tới độ cao rất lớn trong khí quyển vì bầu trời tối đen và các vì sao không còn lấp lánh. Ảo giác về đường chân trời khiến đám mây ảm đạm bên dưới lõm xuống và chiếc xe như trôi bồng bềnh giữa quả cầu khổng lồ tăm tối.
+            </span>
+          `,
+          paragraphTag: "weight: 400 · Vietnamese"
         },
         {
-          label: "Sample 3 of 6 — Cyrillic + Greek",
-          navId: "to-cyr-greek",
-          title:
-            '<span style="font-weight: 100;">Алая вспышка осветила силуэт зазубренного крыла.</span>',
-          paragraph: [
-            '<span style="font-weight: 400;">',
-            "This sample demonstrates loading cyrillic and greek in a single patch: <br/><br/>",
-            "Είναι προικισμένοι με λογική και συνείδηση, και ",
-            "οφείλουν να συμπεριφέρονται μεταξύ τους με πνεύμα αδελφοσύνης. Όλοι οι άνθρωποι ",
-            "γεννιούνται ελεύθεροι και ίσοι στην αξιοπρέπεια και τα δικαιώματα. Είναι προικισμένοι με ",
-            "λογική και συνείδηση, και οφείλουν να συμπεριφέρονται μεταξύ τους με πνεύμα αδελφοσύνης.<br/><br/>",
-            "Высокая гравитация выматывала его, но мышцы изо ",
-            "всех сил пытались приспособиться. Обессиленный, он уже не валился в постель сразу ",
-            "после занятий. Кошмары, не покидавшие его, стали только хуже.",
-            "</span>"
-          ]
+          name: "Cyrillic + Greek",
+          explanation: `
+            <p><strong>Multi-Script Single-Patch Augmentation:</strong> Here the text encounters both Greek and Cyrillic alphabets. With IFT, the encoder can group related scripts or frequency bands so the client fetches the needed glyph patches in a single parallel round-trip rather than downloading dozens of discrete subset slices.</p>
+          `,
+          titleHtml: '<span style="font-weight: 100;">Алая вспышка осветила силуэт зазубренного крыла.</span>',
+          titleTag: "weight: 100 · Cyrillic",
+          paragraphHtml: `
+            <span style="font-weight: 400;">
+              <strong>[Greek]</strong> Είναι προικισμένοι με λογική και συνείδηση, και οφείλουν να συμπεριφέρονται μεταξύ τους με πνεύμα αδελφοσύνης. Όλοι οι άνθρωποι γεννιούνται ελεύθεροι και ίσοι στην αξιοπρέπεια και τα δικαιώματα.<br/><br/>
+              <strong>[Cyrillic]</strong> Высокая гравитация выматывала его, но мышцы изо всех сил пытались приспособиться. Обессиленный, он уже не валился в постель сразу после занятий. Кошмары, не покидавшие его, стали только хуже.
+            </span>
+          `,
+          paragraphTag: "weight: 400 · Greek & Cyrillic"
         },
         {
-          label: "Sample 4 of 6 — Cyrillic Punctuation Kerning",
-          navId: "to-cyr-kerning",
-          title:
-            '<span style="font-weight: 100;">Возвращаться назад предстояло в одиночку.</span>',
-          paragraph: [
-            '<span style="font-weight: 400;">',
-            "Notice that kerning of punctuation and cyrillic codepoints is different versus unicode range. ",
-            "This happens because kerning rules for punctuation are only defined in the latin subset with unicode range. <br/><br/>",
-            "Мелкие детали значительно замедлили бы работу, ",
-            "поэтому, вопреки моему первоначальному намерению, я решил создать существо огромного ",
-            "размера: мощное, около двух с половиной метров ростом. Потратив несколько месяцев на ",
-            "сбор материалов, я приступил к делу.",
-            "</span>"
-          ]
+          name: "Cyrillic Kerning & Punctuation",
+          explanation: `
+            <p><strong>Cross-Script Punctuation Kerning:</strong> Kerning between punctuation marks and Cyrillic letters is often broken in <code>unicode-range</code> subsetting because punctuation kerning rules are typically defined only in the Latin subset file. IFT patches the actual <code>GPOS</code> kerning table directly, guaranteeing identical typography across scripts.</p>
+          `,
+          titleHtml: '<span style="font-weight: 100;">Возвращаться назад предстояло в одиночку.</span>',
+          titleTag: "weight: 100 · Cyrillic",
+          paragraphHtml: `
+            <span style="font-weight: 400;">
+              Мелкие детали значительно замедлили бы работу, поэтому, вопреки моему первоначальному намерению, я решил создать существо огромного размера: мощное, около двух с половиной метров ростом. Потратив несколько месяцев на сбор материалов, я приступил к делу.
+            </span>
+          `,
+          paragraphTag: "weight: 400 · Cyrillic"
         },
         {
-          label: "Sample 5 of 6 — Small Caps (c2sc, smcp)",
-          navId: "to-small-caps",
-          title:
-            '<span style="font-variant: small-caps; font-weight: 100;">Small Caps</span>',
-          title_features: ["c2sc", "smcp"],
-          paragraph: [
-            '<span style="font-weight: 400;">',
-            "This sample incrementally loads the small caps (c2sc) optional layout feature. ",
-            "Notice how under unicode range the small caps are rendered differently since they are synthesized ",
-            "due to them not being present in the unicode range subsets.",
-            "</span>"
-          ]
+          name: "Small Caps (c2sc, smcp)",
+          explanation: `
+            <p><strong>OpenType Layout Feature Loading:</strong> True small caps (<code>font-variant: small-caps</code> via <code>c2sc</code> and <code>smcp</code>) are usually omitted from standard web font subsets to save bandwidth, causing browsers to synthesize fake scaled-down capitals. IFT allows optional layout tables and alternate glyphs to be fetched on demand only when small-caps styling is used.</p>
+          `,
+          titleHtml: '<span style="font-variant: small-caps; font-weight: 100; font-size: 1.15em;">Small Caps &amp; Petite Capitals</span>',
+          titleTag: "features: c2sc, smcp · weight: 100",
+          paragraphHtml: `
+            <span style="font-variant: small-caps; font-weight: 400; font-size: 1.1em;">
+              The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. This text exercises genuine OpenType small caps glyph substitution rather than artificial browser synthesis.
+            </span>
+          `,
+          paragraphTag: "features: c2sc, smcp · weight: 400"
         },
         {
-          label: "Sample 6 of 6 — Variable Design Space Augmentation (Condensed)",
-          navId: "to-width",
-          title:
-            '<span style="font-weight: 300; font-stretch: 75%;">Variable <span style="font-weight: 900;">Design Space</span> Augmentation Example (Condensed)</span>',
-          title_design_space: {
-            wdth: 87.5,
-            wght: 900.0
-          },
-          paragraph: [
-            '<span style="font-weight: 400;">',
-            "Here the width axis has been loaded on demand ",
-            "to display the title in the condensed style.",
-            "</span>"
-          ]
+          name: "Variable Design Space Augmentation",
+          explanation: `
+            <p><strong>On-Demand Axis Extension:</strong> Instead of forcing the client to download variation deltas (<code>gvar</code>, <code>HVAR</code>) for every conceivable width and weight axis extreme upfront, IFT segments the design space so the <strong>condensed width (<code>wdth: 75%</code>)</strong> and <strong>black weight (<code>wght: 900</code>)</strong> data are only transferred when the page styling requests them.</p>
+          `,
+          titleHtml: '<span style="font-weight: 300; font-stretch: 75%;">Variable <span style="font-weight: 900;">Design Space</span> Augmentation (Condensed)</span>',
+          titleTag: "stretch: 75% · weights: 300 & 900",
+          paragraphHtml: `
+            <span style="font-weight: 400; font-stretch: 75%;">
+              Here the width axis (wdth: 75%) has been requested on demand to display this paragraph in Roboto's condensed style, paired with a variable bold (900) title.
+            </span>
+          `,
+          paragraphTag: "stretch: 75% · weight: 400"
         }
       ];
 
-      let pageIndex = -1;
+      let currentIndex = 0;
+      let currentFontMode = "ift";
 
-      function setActiveNav(navId) {
-        document.querySelectorAll(".jump a").forEach((link) => {
-          link.classList.toggle("active", link.id === navId);
+      // Font detection helper using canvas measurement ratio
+      function checkActiveFont() {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        ctx.font = "72px " + (currentFontMode === "fallback" ? "Courier New, monospace" : (currentFontMode === "system" ? "Roboto, sans-serif" : '"Roboto", "Courier New", Courier, monospace'));
+        const w_i = ctx.measureText("iii").width;
+        const w_m = ctx.measureText("MMM").width;
+        const isMonospace = Math.abs(w_i - w_m) < 0.1;
+
+        const indicator = document.getElementById("font-status-indicator");
+        const statusText = document.getElementById("font-status-text");
+        const renderedAs = document.getElementById("rendered-as-val");
+
+        if (currentFontMode === "fallback") {
+          indicator.className = "active-font-indicator indicator-forced";
+          statusText.textContent = "Forced Fallback (Courier New)";
+          renderedAs.textContent = "Courier New (Monospace)";
+        } else if (currentFontMode === "system") {
+          indicator.className = "active-font-indicator indicator-forced";
+          statusText.textContent = "Forced System Roboto";
+          renderedAs.textContent = "System Roboto (Sans-serif)";
+        } else {
+          if (isMonospace) {
+            indicator.className = "active-font-indicator indicator-fallback";
+            statusText.textContent = "Rendering in: Courier New (Fallback)";
+            renderedAs.textContent = "Courier New (Monospace Fallback)";
+          } else {
+            indicator.className = "active-font-indicator indicator-ift";
+            statusText.textContent = "Rendering in: Roboto (IFT Web Font)";
+            renderedAs.textContent = "Roboto (IFT Web Font)";
+          }
+        }
+      }
+
+      function updateSample(index) {
+        currentIndex = Math.max(0, Math.min(ROBOTO_SAMPLES.length - 1, index));
+        const sample = ROBOTO_SAMPLES[currentIndex];
+
+        // Update Nav buttons
+        document.querySelectorAll(".sample-btn").forEach((btn) => {
+          btn.classList.toggle("active", parseInt(btn.dataset.index, 10) === currentIndex);
         });
+
+        document.getElementById("prev-btn").disabled = currentIndex === 0;
+        document.getElementById("next-btn").disabled = currentIndex === ROBOTO_SAMPLES.length - 1;
+        document.getElementById("sample-counter").textContent = `${currentIndex + 1} of ${ROBOTO_SAMPLES.length}`;
+
+        // Update Explanation card
+        document.getElementById("info-header-title").textContent = `About Sample ${currentIndex + 1}: ${sample.name}`;
+        document.getElementById("info-explanation").innerHTML = sample.explanation;
+
+        // Update Specimen stage
+        document.getElementById("specimen-heading-title").textContent = `Sample ${currentIndex + 1}: ${sample.name}`;
+        document.getElementById("title-tag").textContent = sample.titleTag;
+        document.getElementById("paragraph-tag").textContent = sample.paragraphTag;
+
+        document.getElementById("demo-title").innerHTML = sample.titleHtml;
+        document.getElementById("demo-paragraph").innerHTML = sample.paragraphHtml;
+
+        checkActiveFont();
       }
 
-      function renderView() {
-        const introEl = document.getElementById("intro");
-        const sampleEl = document.getElementById("ift_sample");
-        const prevBtn = document.getElementById("prev");
-        const nextBtn = document.getElementById("next");
-        const metaEl = document.getElementById("sample_meta");
+      function setFontMode(mode) {
+        currentFontMode = mode;
+        const titleEl = document.getElementById("demo-title");
+        const paraEl = document.getElementById("demo-paragraph");
 
-        if (pageIndex < 0) {
-          introEl.classList.remove("hide");
-          sampleEl.classList.add("hide");
-          prevBtn.disabled = true;
-          nextBtn.disabled = false;
-          setActiveNav("to-intro");
-          metaEl.innerHTML = "<strong>Current View:</strong> Overview";
-          return;
-        }
+        titleEl.className = "specimen-title specimen-text font-mode-" + (mode === "ift" ? "ift" : (mode === "fallback" ? "fallback" : "system-roboto"));
+        paraEl.className = "specimen-paragraph specimen-text font-mode-" + (mode === "ift" ? "ift" : (mode === "fallback" ? "fallback" : "system-roboto"));
 
-        if (pageIndex >= ROBOTO_SAMPLES.length) {
-          pageIndex = ROBOTO_SAMPLES.length - 1;
-        }
+        document.querySelectorAll(".toggle-option").forEach((opt) => {
+          opt.classList.toggle("active", opt.dataset.mode === mode);
+        });
 
-        const sample = ROBOTO_SAMPLES[pageIndex];
-        introEl.classList.add("hide");
-        sampleEl.classList.remove("hide");
-
-        document.getElementById("sample_label").textContent = sample.label;
-        document.getElementById("title_ift").innerHTML = sample.title;
-        document.getElementById("paragraph_ift").innerHTML = sample.paragraph.join("");
-
-        prevBtn.disabled = false;
-        nextBtn.disabled = pageIndex === ROBOTO_SAMPLES.length - 1;
-        setActiveNav(sample.navId);
-        metaEl.innerHTML = "<strong>Current View:</strong> " + sample.label;
+        checkActiveFont();
       }
 
-      // Track Google Fonts resource transfers when available
-      let bytesTransferred = 0;
+      // Track Network Font Resource sizes
+      let totalBytes = 0;
       if (typeof PerformanceObserver !== "undefined") {
         const observer = new PerformanceObserver((list) => {
           list.getEntries().forEach((entry) => {
@@ -606,50 +884,48 @@
               entry.name.includes("fonts.googleapis.com") ||
               entry.name.includes("fonts.gstatic.com")
             ) {
-              bytesTransferred += entry.transferSize || entry.encodedBodySize || 0;
+              totalBytes += entry.transferSize || entry.encodedBodySize || 0;
             }
           });
-          const bar = document.getElementById("ift_bar");
-          const kb = Math.round(bytesTransferred / 1000).toLocaleString() + " kb";
-          bar.textContent = kb;
-          bar.style.width = bytesTransferred > 0 ? "100%" : "0%";
+          const kb = Math.round(totalBytes / 1000).toLocaleString() + " KB";
+          document.getElementById("transfer-val").textContent = kb;
         });
         observer.observe({ type: "resource", buffered: true });
       }
 
       window.addEventListener("DOMContentLoaded", () => {
-        document.getElementById("prev").addEventListener("click", () => {
-          pageIndex = Math.max(-1, pageIndex - 1);
-          renderView();
+        // Detect native browser support for tech(incremental)
+        const hasIftSupport = typeof CSS !== "undefined" && CSS.supports && CSS.supports("font-tech(incremental)");
+        const supportEl = document.getElementById("browser-support-val");
+        if (supportEl) {
+          supportEl.textContent = hasIftSupport ? "Supported (Enabled)" : "Not Supported (Draft/Experimental)";
+          supportEl.style.color = hasIftSupport ? "var(--color-green)" : "var(--color-amber)";
+        }
+
+        // Stepper click handlers
+        document.getElementById("prev-btn").addEventListener("click", () => updateSample(currentIndex - 1));
+        document.getElementById("next-btn").addEventListener("click", () => updateSample(currentIndex + 1));
+
+        // Sidebar click handlers
+        document.querySelectorAll(".sample-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            updateSample(parseInt(btn.dataset.index, 10));
+          });
         });
 
-        document.getElementById("next").addEventListener("click", () => {
-          pageIndex = Math.min(ROBOTO_SAMPLES.length - 1, pageIndex + 1);
-          renderView();
+        // Font mode toggle handlers
+        document.querySelectorAll(".toggle-option").forEach((opt) => {
+          opt.addEventListener("click", () => {
+            setFontMode(opt.dataset.mode);
+          });
         });
 
-        const jumpTargets = {
-          "to-intro": -1,
-          "to-latin": 0,
-          "to-vietnamese": 1,
-          "to-cyr-greek": 2,
-          "to-cyr-kerning": 3,
-          "to-small-caps": 4,
-          "to-width": 5
-        };
+        updateSample(0);
 
-        Object.entries(jumpTargets).forEach(([id, index]) => {
-          const el = document.getElementById(id);
-          if (el) {
-            el.addEventListener("click", (e) => {
-              e.preventDefault();
-              pageIndex = index;
-              renderView();
-            });
-          }
-        });
-
-        renderView();
+        // Check font after stylesheets load
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(checkActiveFont);
+        }
       });
     </script>
   </body>
