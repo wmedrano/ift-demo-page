@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Incremental Font Transfer (IFT) — Roboto Demo</title>
+    <meta
+      name="description"
+      content="Demonstration of W3C Incremental Font Transfer (IFT) using Roboto served from Google Fonts with a distinct fallback font."
+    />
+
+    <!-- Experimental Google Fonts endpoint serving Roboto with tech(incremental) -->
+    <link
+      id="google-fonts-ift"
+      href="https://fonts.sandbox.google.com/css2?family=Roboto&is_ift=true"
+      rel="stylesheet"
+    />
+
+    <style>
+      /*
+       * Shadow any locally installed OS "Roboto" system font.
+       * When the browser does not yet support `tech(incremental)`, the `@font-face` rule
+       * from Google Fonts is dropped by the CSS parser. Without at least one valid `@font-face`
+       * rule for "Roboto", the browser would treat "Roboto" as a system font name and use the
+       * OS-installed Roboto instead of our fallback font.
+       * Scoping this sentinel rule to the non-character U+FFFE registers "Roboto" as a web font
+       * family so unsupported `tech(incremental)` falls straight through to `--fallback-font`.
+       */
+      @font-face {
+        font-family: "Roboto";
+        font-style: normal;
+        font-weight: 100 900;
+        font-stretch: 75% 100%;
+        src: url("data:font/woff2;base64,");
+        unicode-range: U+FFFE;
+      }
+
+      :root {
+        --bg-page: #f8f9fa;
+        --bg-surface: #ffffff;
+        --bg-subtle: #f1f3f4;
+        --text-primary: #202124;
+        --text-secondary: #5f6368;
+        --border-color: #dadce0;
+        --accent-blue: #1a73e8;
+        --accent-blue-hover: #1557b0;
+        --accent-blue-subtle: #e8f0fe;
+
+        /*
+         * Distinct fallback stack: Courier New / monospace is fixed-width with slab serifs,
+         * making it immediately obvious whether proportional sans-serif "Roboto" (IFT) loaded
+         * or if the browser fell back due to missing tech(incremental) support.
+         */
+        --fallback-font: "Courier New", Courier, monospace;
+        --demo-font-stack: "Roboto", var(--fallback-font);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background-color: var(--bg-page);
+        color: var(--text-primary);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.5;
+      }
+
+      .layout {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 1.5rem;
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-start;
+      }
+
+      /* Left navigation sidebar inspired by garretrieger/ift-demo */
+      .jump {
+        width: 260px;
+        flex-shrink: 0;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.25rem;
+        position: sticky;
+        top: 1.5rem;
+      }
+
+      .jump h2 {
+        margin: 0 0 0.75rem 0;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-secondary);
+      }
+
+      .jump ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .jump li + li {
+        margin-top: 0.35rem;
+      }
+
+      .jump a {
+        display: block;
+        padding: 0.5rem 0.65rem;
+        border-radius: 6px;
+        color: var(--text-primary);
+        text-decoration: none;
+        font-size: 0.925rem;
+        transition: background-color 0.15s ease, color 0.15s ease;
+      }
+
+      .jump a:hover {
+        background-color: var(--bg-subtle);
+      }
+
+      .jump a.active {
+        background-color: var(--accent-blue-subtle);
+        color: var(--accent-blue);
+        font-weight: 600;
+      }
+
+      main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      /* Top controls bar */
+      .controls {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .nav-buttons {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+
+      button {
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-surface);
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+      }
+
+      button:hover:not(:disabled) {
+        background-color: var(--bg-subtle);
+      }
+
+      button.primary {
+        background-color: var(--accent-blue);
+        border-color: var(--accent-blue);
+        color: #ffffff;
+      }
+
+      button.primary:hover:not(:disabled) {
+        background-color: var(--accent-blue-hover);
+      }
+
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      .font-status-banner {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        background: var(--bg-subtle);
+        padding: 0.45rem 0.75rem;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+      }
+
+      .font-status-banner code {
+        font-family: "Courier New", Courier, monospace;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      /* Content + Metrics split area */
+      .text_and_metrics {
+        display: flex;
+        gap: 1rem;
+        align-items: stretch;
+        min-height: 480px;
+      }
+
+      .sample_text {
+        flex: 2;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 2rem;
+      }
+
+      .type-badge {
+        display: inline-block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+      }
+
+      /* The IFT Roboto specimen text area with distinct fallback */
+      .ift-specimen {
+        font-family: var(--demo-font-stack);
+      }
+
+      h1.ift-specimen {
+        font-size: 2.6rem;
+        line-height: 1.25;
+        font-weight: 100;
+        margin: 0 0 1.25rem 0;
+      }
+
+      div.ift-specimen {
+        font-size: 1.35rem;
+        line-height: 1.65;
+      }
+
+      /* Intro styles */
+      #intro h1 {
+        margin-top: 0;
+        font-size: 2rem;
+      }
+
+      #intro p,
+      #intro li {
+        color: var(--text-primary);
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+
+      #intro code {
+        background: var(--bg-subtle);
+        padding: 0.15rem 0.35rem;
+        border-radius: 4px;
+        font-size: 0.9em;
+      }
+
+      .fallback-preview-box {
+        margin-top: 1.25rem;
+        padding: 1rem 1.25rem;
+        background: var(--bg-subtle);
+        border-left: 4px solid var(--accent-blue);
+        border-radius: 4px;
+      }
+
+      .fallback-preview-sample {
+        font-family: var(--fallback-font);
+        font-size: 1.15rem;
+        margin-top: 0.4rem;
+      }
+
+      /* Metrics sidebar */
+      .metrics {
+        flex: 1;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+      }
+
+      .metrics h3 {
+        margin: 0 0 1rem 0;
+        font-size: 1rem;
+      }
+
+      .metric-item {
+        margin-bottom: 1.25rem;
+      }
+
+      .metric-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.35rem;
+      }
+
+      .bar-track {
+        width: 100%;
+        background: var(--bg-subtle);
+        border-radius: 4px;
+        overflow: hidden;
+        height: 28px;
+      }
+
+      .bar {
+        background-color: var(--accent-blue);
+        color: #ffffff;
+        font-size: 0.85rem;
+        font-weight: 600;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        padding: 0 0.6rem;
+        white-space: nowrap;
+        transition: width 0.25s ease;
+        min-width: 4rem;
+      }
+
+      .meta-list {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        border-top: 1px solid var(--border-color);
+        padding-top: 1rem;
+        margin-top: 1rem;
+      }
+
+      .meta-list div + div {
+        margin-top: 0.5rem;
+      }
+
+      .hide {
+        display: none;
+      }
+
+      @media (max-width: 900px) {
+        .layout {
+          flex-direction: column;
+        }
+        .jump {
+          width: 100%;
+          position: static;
+        }
+        .text_and_metrics {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <nav class="jump" aria-label="Sample text navigation">
+        <h2>Jump to</h2>
+        <ul>
+          <li><a href="#" id="to-intro" class="active">Overview</a></li>
+          <li><a href="#" id="to-latin">1. Basic Latin</a></li>
+          <li><a href="#" id="to-vietnamese">2. Vietnamese</a></li>
+          <li><a href="#" id="to-cyr-greek">3. Cyrillic + Greek</a></li>
+          <li><a href="#" id="to-cyr-kerning">4. Cyrillic Kerning</a></li>
+          <li><a href="#" id="to-small-caps">5. Small Caps</a></li>
+          <li><a href="#" id="to-width">6. Design Space Augmentation</a></li>
+        </ul>
+      </nav>
+
+      <main>
+        <div class="controls">
+          <div class="nav-buttons">
+            <button type="button" id="prev" disabled>Previous Text Sample</button>
+            <button type="button" id="next" class="primary">Next Text Sample</button>
+          </div>
+          <div class="font-status-banner">
+            Font stack: <code>font-family: "Roboto", "Courier New", Courier, monospace</code>
+          </div>
+        </div>
+
+        <div class="text_and_metrics">
+          <!-- Intro Panel -->
+          <div id="intro" class="sample_text">
+            <div class="type-badge">Introduction</div>
+            <h1>Incremental Font Transfer Demo (Roboto)</h1>
+            <p>
+              This page demonstrates <strong>Incremental Font Transfer (IFT)</strong> using the
+              <strong>Roboto</strong> sample texts from
+              <a href="https://github.com/garretrieger/ift-demo" target="_blank" rel="noopener">garretrieger/ift-demo</a>.
+            </p>
+            <p>
+              The font is requested directly from Google Fonts' experimental IFT endpoint:
+              <br />
+              <code>https://fonts.sandbox.google.com/css2?family=Roboto&amp;is_ift=true</code>
+            </p>
+            <p>
+              When requested by a modern browser, Google Fonts serves an <code>@font-face</code> rule with
+              <code>src: url(...) format('woff2') tech(incremental)</code>.
+            </p>
+            <div class="fallback-preview-box">
+              <strong>Distinct Fallback Font Indicator:</strong>
+              <p style="margin: 0.35rem 0 0 0;">
+                The sample text uses <code>"Courier New", Courier, monospace</code> (a fixed-width slab-serif font)
+                as its fallback behind <code>"Roboto"</code>. While browser support for <code>tech(incremental)</code>
+                is not active, text renders in this unmistakable monospaced serif fallback; once IFT loads
+                <code>Roboto</code>, it switches to Roboto's clean proportional sans-serif glyphs:
+              </p>
+              <div class="fallback-preview-sample">
+                Fallback preview: The quick brown fox jumps over the lazy dog.
+              </div>
+            </div>
+            <p style="margin-top: 1.25rem;"><strong>Instructions:</strong></p>
+            <ul>
+              <li>
+                Use <strong>Next Text Sample</strong> / <strong>Previous Text Sample</strong> or the
+                <strong>Jump to</strong> links on the left to step through the 6 Roboto samples.
+              </li>
+              <li>
+                Each sample exercises a different aspect of IFT: basic Latin, Vietnamese diacritics &amp; cross-subset
+                kerning, Cyrillic + Greek, punctuation kerning, optional layout features (<code>c2sc</code> /
+                <code>smcp</code>), and variable design-space augmentation (<code>wdth</code> &amp; <code>wght</code>).
+              </li>
+            </ul>
+          </div>
+
+          <!-- IFT Sample Text Panel -->
+          <div id="ift_sample" class="sample_text hide">
+            <div id="sample_label" class="type-badge">Incremental Font Transfer — Roboto</div>
+            <h1 id="title_ift" class="ift-specimen"></h1>
+            <div id="paragraph_ift" class="ift-specimen"></div>
+          </div>
+
+          <!-- Metrics Panel -->
+          <aside class="metrics">
+            <h3>Font Transfer Metrics</h3>
+            <div class="metric-item">
+              <div class="metric-label">Google Fonts bytes transferred:</div>
+              <div class="bar-track">
+                <div id="ift_bar" class="bar" style="width: 0%;">0 kb</div>
+              </div>
+            </div>
+            <div class="meta-list">
+              <div><strong>Active Font Family:</strong> <code>"Roboto"</code></div>
+              <div><strong>Fallback Family:</strong> <code>"Courier New", monospace</code></div>
+              <div id="sample_meta"><strong>Current View:</strong> Overview</div>
+            </div>
+          </aside>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // Roboto-only sample texts taken from garretrieger/ift-demo/docs/sample-texts.json
+      const ROBOTO_SAMPLES = [
+        {
+          label: "Sample 1 of 6 — Basic Latin",
+          navId: "to-latin",
+          title:
+            '<span style="font-weight: 100;">In this first sample only basic latin support is loaded.</span>',
+          paragraph: [
+            '<span style="font-weight: 400;">',
+            "A peep at some distant orb has power to raise and purify our ",
+            "thoughts like a strain of sacred music, or a noble picture, or a passage from the ",
+            "grander poets. It always does one good.",
+            "</span>"
+          ]
+        },
+        {
+          label: "Sample 2 of 6 — Vietnamese",
+          navId: "to-vietnamese",
+          title:
+            '<span style="font-weight: 100;">Bầu trời trong xanh thăm thẳm, không một gợn mây.</span>',
+          paragraph: [
+            '<span style="font-weight: 400;">',
+            "Here we augment the font to add support for vietnamese. ",
+            "Notice that the characters ộ and ậ don't render correctly with unicode range. ",
+            "This happens due to splitting of interacting codepoints between unicode range subsets. ",
+            "Likewise the kerning is different versus the unicode range implementation. This is because unicode ",
+            "range breaks kerning between latin and vietnamese characters.<br/><br/>",
+            "Phải áp dụng chế độ giáo dục miễn phí, ít nhất là ở bậc tiểu học và giáo dục cơ sở",
+            "<br/><br/>",
+            "Chúng tôi đã đạt tới độ cao rất lớn trong khí quyển ",
+            "vì bầu trời tối đen và các vì sao không còn lấp lánh. Ảo giác về đường chân trời khiến ",
+            "đám mây ảm đạm bên dưới lõm xuống và chiếc xe như trôi bồng bềnh giữa quả cầu khổng lồ ",
+            "tăm tối.",
+            "</span>"
+          ]
+        },
+        {
+          label: "Sample 3 of 6 — Cyrillic + Greek",
+          navId: "to-cyr-greek",
+          title:
+            '<span style="font-weight: 100;">Алая вспышка осветила силуэт зазубренного крыла.</span>',
+          paragraph: [
+            '<span style="font-weight: 400;">',
+            "This sample demonstrates loading cyrillic and greek in a single patch: <br/><br/>",
+            "Είναι προικισμένοι με λογική και συνείδηση, και ",
+            "οφείλουν να συμπεριφέρονται μεταξύ τους με πνεύμα αδελφοσύνης. Όλοι οι άνθρωποι ",
+            "γεννιούνται ελεύθεροι και ίσοι στην αξιοπρέπεια και τα δικαιώματα. Είναι προικισμένοι με ",
+            "λογική και συνείδηση, και οφείλουν να συμπεριφέρονται μεταξύ τους με πνεύμα αδελφοσύνης.<br/><br/>",
+            "Высокая гравитация выматывала его, но мышцы изо ",
+            "всех сил пытались приспособиться. Обессиленный, он уже не валился в постель сразу ",
+            "после занятий. Кошмары, не покидавшие его, стали только хуже.",
+            "</span>"
+          ]
+        },
+        {
+          label: "Sample 4 of 6 — Cyrillic Punctuation Kerning",
+          navId: "to-cyr-kerning",
+          title:
+            '<span style="font-weight: 100;">Возвращаться назад предстояло в одиночку.</span>',
+          paragraph: [
+            '<span style="font-weight: 400;">',
+            "Notice that kerning of punctuation and cyrillic codepoints is different versus unicode range. ",
+            "This happens because kerning rules for punctuation are only defined in the latin subset with unicode range. <br/><br/>",
+            "Мелкие детали значительно замедлили бы работу, ",
+            "поэтому, вопреки моему первоначальному намерению, я решил создать существо огромного ",
+            "размера: мощное, около двух с половиной метров ростом. Потратив несколько месяцев на ",
+            "сбор материалов, я приступил к делу.",
+            "</span>"
+          ]
+        },
+        {
+          label: "Sample 5 of 6 — Small Caps (c2sc, smcp)",
+          navId: "to-small-caps",
+          title:
+            '<span style="font-variant: small-caps; font-weight: 100;">Small Caps</span>',
+          title_features: ["c2sc", "smcp"],
+          paragraph: [
+            '<span style="font-weight: 400;">',
+            "This sample incrementally loads the small caps (c2sc) optional layout feature. ",
+            "Notice how under unicode range the small caps are rendered differently since they are synthesized ",
+            "due to them not being present in the unicode range subsets.",
+            "</span>"
+          ]
+        },
+        {
+          label: "Sample 6 of 6 — Variable Design Space Augmentation (Condensed)",
+          navId: "to-width",
+          title:
+            '<span style="font-weight: 300; font-stretch: 75%;">Variable <span style="font-weight: 900;">Design Space</span> Augmentation Example (Condensed)</span>',
+          title_design_space: {
+            wdth: 87.5,
+            wght: 900.0
+          },
+          paragraph: [
+            '<span style="font-weight: 400;">',
+            "Here the width axis has been loaded on demand ",
+            "to display the title in the condensed style.",
+            "</span>"
+          ]
+        }
+      ];
+
+      let pageIndex = -1;
+
+      function setActiveNav(navId) {
+        document.querySelectorAll(".jump a").forEach((link) => {
+          link.classList.toggle("active", link.id === navId);
+        });
+      }
+
+      function renderView() {
+        const introEl = document.getElementById("intro");
+        const sampleEl = document.getElementById("ift_sample");
+        const prevBtn = document.getElementById("prev");
+        const nextBtn = document.getElementById("next");
+        const metaEl = document.getElementById("sample_meta");
+
+        if (pageIndex < 0) {
+          introEl.classList.remove("hide");
+          sampleEl.classList.add("hide");
+          prevBtn.disabled = true;
+          nextBtn.disabled = false;
+          setActiveNav("to-intro");
+          metaEl.innerHTML = "<strong>Current View:</strong> Overview";
+          return;
+        }
+
+        if (pageIndex >= ROBOTO_SAMPLES.length) {
+          pageIndex = ROBOTO_SAMPLES.length - 1;
+        }
+
+        const sample = ROBOTO_SAMPLES[pageIndex];
+        introEl.classList.add("hide");
+        sampleEl.classList.remove("hide");
+
+        document.getElementById("sample_label").textContent = sample.label;
+        document.getElementById("title_ift").innerHTML = sample.title;
+        document.getElementById("paragraph_ift").innerHTML = sample.paragraph.join("");
+
+        prevBtn.disabled = false;
+        nextBtn.disabled = pageIndex === ROBOTO_SAMPLES.length - 1;
+        setActiveNav(sample.navId);
+        metaEl.innerHTML = "<strong>Current View:</strong> " + sample.label;
+      }
+
+      // Track Google Fonts resource transfers when available
+      let bytesTransferred = 0;
+      if (typeof PerformanceObserver !== "undefined") {
+        const observer = new PerformanceObserver((list) => {
+          list.getEntries().forEach((entry) => {
+            if (
+              entry.name.includes("fonts.sandbox.google.com") ||
+              entry.name.includes("fonts.googleapis.com") ||
+              entry.name.includes("fonts.gstatic.com")
+            ) {
+              bytesTransferred += entry.transferSize || entry.encodedBodySize || 0;
+            }
+          });
+          const bar = document.getElementById("ift_bar");
+          const kb = Math.round(bytesTransferred / 1000).toLocaleString() + " kb";
+          bar.textContent = kb;
+          bar.style.width = bytesTransferred > 0 ? "100%" : "0%";
+        });
+        observer.observe({ type: "resource", buffered: true });
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("prev").addEventListener("click", () => {
+          pageIndex = Math.max(-1, pageIndex - 1);
+          renderView();
+        });
+
+        document.getElementById("next").addEventListener("click", () => {
+          pageIndex = Math.min(ROBOTO_SAMPLES.length - 1, pageIndex + 1);
+          renderView();
+        });
+
+        const jumpTargets = {
+          "to-intro": -1,
+          "to-latin": 0,
+          "to-vietnamese": 1,
+          "to-cyr-greek": 2,
+          "to-cyr-kerning": 3,
+          "to-small-caps": 4,
+          "to-width": 5
+        };
+
+        Object.entries(jumpTargets).forEach(([id, index]) => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.addEventListener("click", (e) => {
+              e.preventDefault();
+              pageIndex = index;
+              renderView();
+            });
+          }
+        });
+
+        renderView();
+      });
+    </script>
+  </body>
+</html>
