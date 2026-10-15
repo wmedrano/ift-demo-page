@@ -9,13 +9,13 @@
 @font-face {
   font-family: "Roboto";
   font-style: normal;
-  font-weight: 100 900;
-  font-stretch: 75% 100%;
+  font-weight: 400;
+  font-stretch: 100%;
   src: url("data:font/woff2;base64,");
   unicode-range: U+FFFE;
 }
 
-/* Distinct fallback font: Courier New / monospace is fixed-width with slab serifs */
+/* Distinct fallback font: user's default monospace font */
 :root {
   --bg-page: #f6f8fa;
   --bg-surface: #ffffff;
@@ -34,7 +34,7 @@
   --color-green-subtle: #dafbe1;
 
   --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
-  --font-fallback: "Courier New", Courier, monospace;
+  --font-fallback: monospace;
   --font-under-test: "Roboto", var(--font-fallback);
 }
 
@@ -415,16 +415,13 @@ button.ctrl-btn:disabled {
 }
 
 /* Font class applied to specimen */
-.font-mode-ift {
+.font-mode-ift,
+.font-mode-unicode-range {
   font-family: var(--font-under-test);
 }
 
 .font-mode-fallback {
   font-family: var(--font-fallback) !important;
-}
-
-.font-mode-system-roboto {
-  font-family: Roboto, sans-serif !important;
 }
 
 /* Specimen Typography sizes */

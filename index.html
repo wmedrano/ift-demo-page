@@ -26,9 +26,9 @@
           <h1><span>🔤</span> Incremental Font Transfer (IFT) — Roboto Demo</h1>
           <p>Specimen text from the original W3C IFT demo, testing Google Fonts IFT serving</p>
         </div>
-        <div class="endpoint-pill" title="Experimental Google Fonts IFT CSS endpoint">
+        <div class="endpoint-pill" title="Active Google Fonts CSS endpoint">
           <span>Endpoint:</span>
-          <code>fonts.sandbox.google.com/...&amp;is_ift=true</code>
+          <code id="endpoint-pill-code">fonts.sandbox.google.com/...&amp;is_ift=true</code>
         </div>
       </div>
     </header>
@@ -90,15 +90,15 @@
           </div>
 
           <!-- Font mode toggle to inspect rendering differences -->
-          <div class="font-toggle-group" title="Switch font rendering mode to clearly see the fallback vs Roboto">
+          <div class="font-toggle-group" title="Switch font rendering mode between IFT, Unicode Range Subset, and Fallback Only">
             <button type="button" class="toggle-option active" data-mode="ift">
-              Tested Stack (Roboto → Fallback)
+              IFT
+            </button>
+            <button type="button" class="toggle-option" data-mode="unicode-range">
+              Unicode Range Subset
             </button>
             <button type="button" class="toggle-option" data-mode="fallback">
-              Force Courier New (Fallback)
-            </button>
-            <button type="button" class="toggle-option" data-mode="system">
-              Force System Roboto
+              Fallback Only
             </button>
           </div>
         </div>
@@ -168,8 +168,8 @@
           <div class="metrics-grid">
             <div class="metric-box">
               <div class="metric-title">Target Web Font</div>
-              <div class="metric-value">Roboto (tech(incremental))</div>
-              <div class="metric-sub">Via Google Fonts Sandbox endpoint</div>
+              <div class="metric-value" id="target-font-val">Roboto (tech(incremental))</div>
+              <div class="metric-sub" id="target-font-sub">Via Google Fonts Sandbox endpoint</div>
             </div>
             <div class="metric-box">
               <div class="metric-title">Browser IFT Support</div>
@@ -178,7 +178,7 @@
             </div>
             <div class="metric-box">
               <div class="metric-title">Currently Rendered As</div>
-              <div class="metric-value" id="rendered-as-val">Courier New (Fallback)</div>
+              <div class="metric-value" id="rendered-as-val">Monospace (Fallback)</div>
               <div class="metric-sub">Measured via canvas font-width ratio</div>
             </div>
             <div class="metric-box">
@@ -199,14 +199,13 @@
             <div style="font-size: 0.8rem; font-weight: normal; color: var(--text-secondary);">
               <span>Google Fonts query: </span>
               <select id="endpoint-select" style="font-size: 0.8rem; padding: 0.2rem 0.4rem; border-radius: 4px; border: 1px solid var(--border-color);">
-                <option value="https://fonts.sandbox.google.com/css2?family=Roboto&is_ift=true">family=Roboto (400 only)</option>
-                <option value="https://fonts.sandbox.google.com/css2?family=Roboto:wdth,wght@75..100,100..900&is_ift=true">family=Roboto:wdth,wght@75..100,100..900 (Variable weights 100-900)</option>
-                <option value="https://fonts.googleapis.com/css2?family=Roboto:wdth,wght@75..100,100..900&display=swap">Google Fonts Production (unicode-range)</option>
+                <option value="family=Roboto">family=Roboto (400 only)</option>
+                <option value="family=Roboto:wdth,wght@75..100,100..900">family=Roboto:wdth,wght@75..100,100..900 (Variable weights 100-900)</option>
               </select>
             </div>
           </div>
           <div class="info-body" style="font-size: 0.875rem; color: var(--text-secondary);">
-            <p><strong>1. Chrome DevTools "Rendered Fonts" (The definitive test):</strong> Right-click the headline text &rarr; <em>Inspect</em>. In the right panel, select the <strong>Computed</strong> tab and scroll to the very bottom to <strong>Rendered Fonts</strong>. Chrome will display the exact font file used (e.g. <code>Courier New</code> vs <code>Roboto</code>) and how many glyphs it rendered.</p>
+            <p><strong>1. Chrome DevTools "Rendered Fonts" (The definitive test):</strong> Right-click the headline text &rarr; <em>Inspect</em>. In the right panel, select the <strong>Computed</strong> tab and scroll to the very bottom to <strong>Rendered Fonts</strong>. Chrome will display the exact font file used (e.g. your system monospace font vs <code>Roboto</code>) and how many glyphs it rendered.</p>
             <p><strong>2. Why Headlines might fall back:</strong>
               The headlines use <code>font-weight: 100</code> (Thin) while paragraphs use <code>font-weight: 400</code>. If the loaded web font or system font does not provide a <code>100</code> face, or if specific diacritics / Cyrillic characters are missing from the thin cut, the browser performs per-character font fallback to the next font in the stack that supports them.
             </p>

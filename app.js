@@ -4,7 +4,7 @@ const ROBOTO_SAMPLES = [
     name: "Basic Latin",
     explanation: `
       <p><strong>Initial Font Baseline:</strong> In this first sample, only basic Latin characters are needed. In an IFT deployment, the browser receives a small initial base font containing core Latin glyphs and table maps.</p>
-      <p>Because browser engine support for <code>tech(incremental)</code> is not yet active, the text below renders in our distinct <strong>Courier New (monospace slab-serif) fallback</strong>. When IFT is supported, it seamlessly upgrades to Roboto's thin (100) and regular (400) proportional sans-serif.</p>
+      <p>Because browser engine support for <code>tech(incremental)</code> is not yet active, the text below renders in the user's <strong>monospace fallback</strong> font. When IFT is supported, it seamlessly upgrades to Roboto's thin (100) and regular (400) proportional sans-serif.</p>
     `,
     titleHtml: '<span style="font-weight: 100;">In this first sample only basic latin support is loaded.</span>',
     titleTag: "weight: 100",
@@ -94,20 +94,20 @@ let currentIndex = 0;
 let currentFontMode = "ift";
 
 // Font detection helper using canvas measurement ratio
-function testElementFont(fontStack, weight, stretch, sampleChar) {
+function testElementFont(fontStack, weight, stretch) {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   const stretchStr = stretch ? stretch + " " : "";
   ctx.font = `${weight} ${stretchStr}72px ${fontStack}`;
   const w_i = ctx.measureText("iii").width;
   const w_m = ctx.measureText("MMM").width;
-  return Math.abs(w_i - w_m) < 0.1 ? "Courier New (Fallback)" : "Roboto (Sans-serif)";
+  return Math.abs(w_i - w_m) < 0.1 ? "Monospace (Fallback)" : "Roboto (Sans-serif)";
 }
 
 function checkActiveFont() {
   const fontStack = currentFontMode === "fallback"
-    ? "Courier New, monospace"
-    : (currentFontMode === "system" ? "Roboto, sans-serif" : '"Roboto", "Courier New", Courier, monospace');
+    ? "monospace"
+    : '"Roboto", monospace';
 
   const titleWeight = currentIndex === 5 ? "300" : "100";
   const titleStretch = currentIndex === 5 ? "75%" : "100%";
@@ -122,24 +122,23 @@ function checkActiveFont() {
   const indicator = document.getElementById("font-status-indicator");
   const statusText = document.getElementById("font-status-text");
   const renderedAs = document.getElementById("rendered-as-val");
+  const webFontLabel = currentFontMode === "unicode-range"
+    ? "Roboto (Unicode Range)"
+    : "Roboto (IFT Web Font)";
 
   if (currentFontMode === "fallback") {
     indicator.className = "active-font-indicator indicator-forced";
-    statusText.textContent = "Forced Fallback (Courier New)";
-    renderedAs.textContent = "Courier New (Monospace)";
-  } else if (currentFontMode === "system") {
-    indicator.className = "active-font-indicator indicator-forced";
-    statusText.textContent = "Forced System Roboto";
-    renderedAs.textContent = "System Roboto (Sans-serif)";
+    statusText.textContent = "Fallback Only (Monospace)";
+    renderedAs.textContent = "Monospace (Fallback)";
   } else {
     if (titleFont.includes("Fallback") && paraFont.includes("Fallback")) {
       indicator.className = "active-font-indicator indicator-fallback";
-      statusText.textContent = "Rendering in: Courier New (Fallback)";
-      renderedAs.textContent = "Courier New (Monospace Fallback)";
+      statusText.textContent = "Rendering in: Monospace (Fallback)";
+      renderedAs.textContent = "Monospace (Fallback)";
     } else if (!titleFont.includes("Fallback") && !paraFont.includes("Fallback")) {
       indicator.className = "active-font-indicator indicator-ift";
-      statusText.textContent = "Rendering in: Roboto (IFT Web Font)";
-      renderedAs.textContent = "Roboto (IFT Web Font)";
+      statusText.textContent = "Rendering in: " + webFontLabel;
+      renderedAs.textContent = webFontLabel;
     } else {
       indicator.className = "active-font-indicator indicator-fallback";
       statusText.textContent = `Mixed: Title=${titleFont}, Body=${paraFont}`;
@@ -176,18 +175,67 @@ function updateSample(index) {
   checkActiveFont();
 }
 
+function updateStylesheetUrl() {
+  const endpointSelect = document.getElementById("endpoint-select");
+  const query = endpointSelect ? endpointSelect.value : "family=Roboto";
+  const link = document.getElementById("google-fonts-ift");
+  const pillCode = document.getElementById("endpoint-pill-code");
+  const targetVal = document.getElementById("target-font-val");
+  const targetSub = document.getElementById("target-font-sub");
+
+  if (currentFontMode === "fallback") {
+    if (targetVal) targetVal.textContent = "Monospace (Fallback Only)";
+    if (targetSub) targetSub.textContent = "System default monospace font";
+    return;
+  }
+
+  const isUnicodeRange = currentFontMode === "unicode-range";
+  const nextHref = isUnicodeRange
+    ? `https://fonts.googleapis.com/css2?${query}`
+    : `https://fonts.sandbox.google.com/css2?${query}&is_ift=true`;
+
+  if (pillCode) {
+    pillCode.textContent = isUnicodeRange
+      ? `fonts.googleapis.com/css2?${query}`
+      : `fonts.sandbox.google.com/...&is_ift=true`;
+  }
+  if (targetVal) {
+    targetVal.textContent = isUnicodeRange
+      ? "Roboto (unicode-range)"
+      : "Roboto (tech(incremental))";
+  }
+  if (targetSub) {
+    targetSub.textContent = isUnicodeRange
+      ? "Via Google Fonts Production endpoint"
+      : "Via Google Fonts Sandbox endpoint";
+  }
+
+  if (link && link.getAttribute("href") !== nextHref) {
+    link.href = nextHref;
+    setTimeout(() => {
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(checkActiveFont);
+      } else {
+        checkActiveFont();
+      }
+    }, 300);
+  }
+}
+
 function setFontMode(mode) {
   currentFontMode = mode;
   const titleEl = document.getElementById("demo-title");
   const paraEl = document.getElementById("demo-paragraph");
 
-  titleEl.className = "specimen-title specimen-text font-mode-" + (mode === "ift" ? "ift" : (mode === "fallback" ? "fallback" : "system-roboto"));
-  paraEl.className = "specimen-paragraph specimen-text font-mode-" + (mode === "ift" ? "ift" : (mode === "fallback" ? "fallback" : "system-roboto"));
+  const modeClass = mode === "fallback" ? "fallback" : (mode === "unicode-range" ? "unicode-range" : "ift");
+  titleEl.className = "specimen-title specimen-text font-mode-" + modeClass;
+  paraEl.className = "specimen-paragraph specimen-text font-mode-" + modeClass;
 
   document.querySelectorAll(".toggle-option").forEach((opt) => {
     opt.classList.toggle("active", opt.dataset.mode === mode);
   });
 
+  updateStylesheetUrl();
   checkActiveFont();
 }
 
@@ -240,19 +288,24 @@ window.addEventListener("DOMContentLoaded", () => {
   // Endpoint dropdown handler
   const endpointSelect = document.getElementById("endpoint-select");
   if (endpointSelect) {
-    endpointSelect.addEventListener("change", (e) => {
-      const link = document.getElementById("google-fonts-ift");
-      if (link) {
-        link.href = e.target.value;
-        setTimeout(() => {
-          if (document.fonts && document.fonts.ready) {
-            document.fonts.ready.then(checkActiveFont);
-          } else {
-            checkActiveFont();
-          }
-        }, 500);
+    endpointSelect.addEventListener("change", () => {
+      updateStylesheetUrl();
+    });
+  }
+
+  const link = document.getElementById("google-fonts-ift");
+  if (link) {
+    link.addEventListener("load", () => {
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(checkActiveFont);
+      } else {
+        checkActiveFont();
       }
     });
+  }
+
+  if (document.fonts && document.fonts.addEventListener) {
+    document.fonts.addEventListener("loadingdone", checkActiveFont);
   }
 
   updateSample(0);
