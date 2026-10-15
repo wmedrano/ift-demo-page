@@ -15,7 +15,7 @@
   unicode-range: U+FFFE;
 }
 
-/* Distinct fallback font: user's default monospace font */
+/* Distinct fallback font: Comic Sans MS (system "cursive" font) */
 :root {
   --bg-page: #f6f8fa;
   --bg-surface: #ffffff;
@@ -34,7 +34,7 @@
   --color-green-subtle: #dafbe1;
 
   --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
-  --font-fallback: monospace;
+  --font-fallback: "Comic Sans MS", cursive;
   --font-under-test: "Roboto", var(--font-fallback);
 }
 

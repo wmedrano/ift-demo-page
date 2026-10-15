@@ -4,7 +4,7 @@ const ROBOTO_SAMPLES = [
     name: "Basic Latin",
     explanation: `
       <p><strong>Initial Font Baseline:</strong> In this first sample, only basic Latin characters are needed. In an IFT deployment, the browser receives a small initial base font containing core Latin glyphs and table maps.</p>
-      <p>Because browser engine support for <code>tech(incremental)</code> is not yet active, the text below renders in the user's <strong>monospace fallback</strong> font. When IFT is supported, it seamlessly upgrades to Roboto's thin (100) and regular (400) proportional sans-serif.</p>
+      <p>Because browser engine support for <code>tech(incremental)</code> is not yet active, the text below renders in the <strong>Comic Sans fallback</strong> font. When IFT is supported, it seamlessly upgrades to Roboto's thin (100) and regular (400) proportional sans-serif.</p>
     `,
     titleHtml: '<span style="font-weight: 100;">In this first sample only basic latin support is loaded.</span>',
     titleTag: "weight: 100",
@@ -93,21 +93,27 @@ const ROBOTO_SAMPLES = [
 let currentIndex = 0;
 let currentFontMode = "ift";
 
-// Font detection helper using canvas measurement ratio
+// Fallback font stack (keep in sync with --font-fallback in styles.css)
+const FALLBACK_STACK = '"Comic Sans MS", cursive';
+
+// Font detection helper: compares the rendered width of a test string in the
+// given stack against the same string rendered in the fallback stack alone.
 function testElementFont(fontStack, weight, stretch) {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   const stretchStr = stretch ? stretch + " " : "";
+  const sample = "Hamburgefonstiv 0123456789";
   ctx.font = `${weight} ${stretchStr}72px ${fontStack}`;
-  const w_i = ctx.measureText("iii").width;
-  const w_m = ctx.measureText("MMM").width;
-  return Math.abs(w_i - w_m) < 0.1 ? "Monospace (Fallback)" : "Roboto (Sans-serif)";
+  const w_stack = ctx.measureText(sample).width;
+  ctx.font = `${weight} ${stretchStr}72px ${FALLBACK_STACK}`;
+  const w_fallback = ctx.measureText(sample).width;
+  return Math.abs(w_stack - w_fallback) < 0.1 ? "Comic Sans (Fallback)" : "Roboto (Sans-serif)";
 }
 
 function checkActiveFont() {
   const fontStack = currentFontMode === "fallback"
-    ? "monospace"
-    : '"Roboto", monospace';
+    ? FALLBACK_STACK
+    : `"Roboto", ${FALLBACK_STACK}`;
 
   const titleWeight = currentIndex === 5 ? "300" : "100";
   const titleStretch = currentIndex === 5 ? "75%" : "100%";
@@ -128,13 +134,13 @@ function checkActiveFont() {
 
   if (currentFontMode === "fallback") {
     indicator.className = "active-font-indicator indicator-forced";
-    statusText.textContent = "Fallback Only (Monospace)";
-    renderedAs.textContent = "Monospace (Fallback)";
+    statusText.textContent = "Fallback Only (Comic Sans)";
+    renderedAs.textContent = "Comic Sans (Fallback)";
   } else {
     if (titleFont.includes("Fallback") && paraFont.includes("Fallback")) {
       indicator.className = "active-font-indicator indicator-fallback";
-      statusText.textContent = "Rendering in: Monospace (Fallback)";
-      renderedAs.textContent = "Monospace (Fallback)";
+      statusText.textContent = "Rendering in: Comic Sans (Fallback)";
+      renderedAs.textContent = "Comic Sans (Fallback)";
     } else if (!titleFont.includes("Fallback") && !paraFont.includes("Fallback")) {
       indicator.className = "active-font-indicator indicator-ift";
       statusText.textContent = "Rendering in: " + webFontLabel;
@@ -184,8 +190,8 @@ function updateStylesheetUrl() {
   const targetSub = document.getElementById("target-font-sub");
 
   if (currentFontMode === "fallback") {
-    if (targetVal) targetVal.textContent = "Monospace (Fallback Only)";
-    if (targetSub) targetSub.textContent = "System default monospace font";
+    if (targetVal) targetVal.textContent = "Comic Sans (Fallback Only)";
+    if (targetSub) targetSub.textContent = "Comic Sans MS (system cursive font)";
     return;
   }
 

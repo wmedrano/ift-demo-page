@@ -178,7 +178,7 @@
             </div>
             <div class="metric-box">
               <div class="metric-title">Currently Rendered As</div>
-              <div class="metric-value" id="rendered-as-val">Monospace (Fallback)</div>
+              <div class="metric-value" id="rendered-as-val">Comic Sans (Fallback)</div>
               <div class="metric-sub">Measured via canvas font-width ratio</div>
             </div>
             <div class="metric-box">
@@ -205,7 +205,7 @@
             </div>
           </div>
           <div class="info-body" style="font-size: 0.875rem; color: var(--text-secondary);">
-            <p><strong>1. Chrome DevTools "Rendered Fonts" (The definitive test):</strong> Right-click the headline text &rarr; <em>Inspect</em>. In the right panel, select the <strong>Computed</strong> tab and scroll to the very bottom to <strong>Rendered Fonts</strong>. Chrome will display the exact font file used (e.g. your system monospace font vs <code>Roboto</code>) and how many glyphs it rendered.</p>
+            <p><strong>1. Chrome DevTools "Rendered Fonts" (The definitive test):</strong> Right-click the headline text &rarr; <em>Inspect</em>. In the right panel, select the <strong>Computed</strong> tab and scroll to the very bottom to <strong>Rendered Fonts</strong>. Chrome will display the exact font file used (e.g. Comic Sans MS vs <code>Roboto</code>) and how many glyphs it rendered.</p>
             <p><strong>2. Why Headlines might fall back:</strong>
               The headlines use <code>font-weight: 100</code> (Thin) while paragraphs use <code>font-weight: 400</code>. If the loaded web font or system font does not provide a <code>100</code> face, or if specific diacritics / Cyrillic characters are missing from the thin cut, the browser performs per-character font fallback to the next font in the stack that supports them.
             </p>
