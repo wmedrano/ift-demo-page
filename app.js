@@ -4,7 +4,7 @@ const ROBOTO_SAMPLES = [
     name: "Basic Latin",
     explanation: `
       <p><strong>Initial Font Baseline:</strong> In this first sample, only basic Latin characters are needed. In an IFT deployment, the browser receives a small initial base font containing core Latin glyphs and table maps.</p>
-      <p>Because browser engine support for <code>tech(incremental)</code> is not yet active, the text below renders in the <strong>Comic Sans fallback</strong> font. When IFT is supported, it seamlessly upgrades to Roboto's thin (100) and regular (400) proportional sans-serif.</p>
+      <p>If the browser does not support <code>tech(incremental)</code>, the text below stays in the <strong>Comic Sans fallback</strong> font. When IFT is supported, it initially renders in the fallback and then upgrades to Roboto's thin (100) and regular (400) proportional sans-serif once the needed patches are fetched and applied.</p>
     `,
     titleHtml: '<span style="font-weight: 100;">In this first sample only basic latin support is loaded.</span>',
     titleTag: "weight: 100",
@@ -96,18 +96,72 @@ let currentFontMode = "ift";
 // Fallback font stack (keep in sync with --font-fallback in styles.css)
 const FALLBACK_STACK = '"Comic Sans MS", cursive';
 
-// Font detection helper: compares the rendered width of a test string in the
-// given stack against the same string rendered in the fallback stack alone.
-function testElementFont(fontStack, weight, stretch) {
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  const stretchStr = stretch ? stretch + " " : "";
-  const sample = "Hamburgefonstiv 0123456789";
-  ctx.font = `${weight} ${stretchStr}72px ${fontStack}`;
-  const w_stack = ctx.measureText(sample).width;
-  ctx.font = `${weight} ${stretchStr}72px ${FALLBACK_STACK}`;
-  const w_fallback = ctx.measureText(sample).width;
-  return Math.abs(w_stack - w_fallback) < 0.1 ? "Comic Sans (Fallback)" : "Roboto (Sans-serif)";
+// Font detection via hidden DOM probes.
+//
+// Canvas measureText() cannot be used here: canvas text does not trigger IFT
+// patch requests, so it always measures against the unpatched initial font and
+// reports the fallback. Instead we clone the actual specimen markup into two
+// hidden inline-block probes (one in the font stack under test, one in the
+// fallback stack only) and compare their widths. Because the probes are real
+// DOM text, IFT fetches/applies patches for them, and a ResizeObserver re-runs
+// detection when the font is invalidated after a patch is applied.
+const probes = {};
+let probeObserver = null;
+
+function getProbeHost() {
+  let host = document.getElementById("font-probe-host");
+  if (!host) {
+    host = document.createElement("div");
+    host.id = "font-probe-host";
+    host.setAttribute("aria-hidden", "true");
+    host.style.cssText =
+      "position:absolute;left:-100000px;top:0;visibility:hidden;pointer-events:none;";
+    document.body.appendChild(host);
+  }
+  return host;
+}
+
+function makeProbe(fontFamily) {
+  const el = document.createElement("span");
+  el.style.cssText = "display:inline-block;white-space:nowrap;";
+  el.style.fontFamily = fontFamily;
+  getProbeHost().appendChild(el);
+  return el;
+}
+
+function syncProbes(key, sourceEl, fontStack) {
+  if (!probes[key]) {
+    probes[key] = { test: makeProbe(fontStack), fallback: makeProbe(FALLBACK_STACK) };
+    if (typeof ResizeObserver !== "undefined") {
+      if (!probeObserver) {
+        let pending = false;
+        probeObserver = new ResizeObserver(() => {
+          if (pending) return;
+          pending = true;
+          requestAnimationFrame(() => {
+            pending = false;
+            checkActiveFont();
+          });
+        });
+      }
+      probeObserver.observe(probes[key].test);
+    }
+  }
+  const { test, fallback } = probes[key];
+  const fontSize = getComputedStyle(sourceEl).fontSize;
+  test.style.fontFamily = fontStack;
+  for (const p of [test, fallback]) {
+    p.style.fontSize = fontSize;
+    if (p.innerHTML !== sourceEl.innerHTML) p.innerHTML = sourceEl.innerHTML;
+  }
+  return probes[key];
+}
+
+function testElementFont(key, sourceEl, fontStack) {
+  const { test, fallback } = syncProbes(key, sourceEl, fontStack);
+  const wTest = test.getBoundingClientRect().width;
+  const wFallback = fallback.getBoundingClientRect().width;
+  return Math.abs(wTest - wFallback) < 0.5 ? "Comic Sans (Fallback)" : "Roboto (Sans-serif)";
 }
 
 function checkActiveFont() {
@@ -115,10 +169,8 @@ function checkActiveFont() {
     ? FALLBACK_STACK
     : `"Roboto", ${FALLBACK_STACK}`;
 
-  const titleWeight = currentIndex === 5 ? "300" : "100";
-  const titleStretch = currentIndex === 5 ? "75%" : "100%";
-  const titleFont = testElementFont(fontStack, titleWeight, titleStretch);
-  const paraFont = testElementFont(fontStack, "400", currentIndex === 5 ? "75%" : "100%");
+  const titleFont = testElementFont("title", document.getElementById("demo-title"), fontStack);
+  const paraFont = testElementFont("para", document.getElementById("demo-paragraph"), fontStack);
 
   const titleTagEl = document.getElementById("title-font-detected");
   const paraTagEl = document.getElementById("para-font-detected");
