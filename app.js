@@ -235,7 +235,7 @@ function updateSample(index) {
 
 function updateStylesheetUrl() {
   const endpointSelect = document.getElementById("endpoint-select");
-  const query = endpointSelect ? endpointSelect.value : "family=Roboto";
+  const query = endpointSelect ? endpointSelect.value : "family=Roboto:wdth,wght@75..100,100..900";
   const link = document.getElementById("google-fonts-ift");
   const pillCode = document.getElementById("endpoint-pill-code");
   const targetVal = document.getElementById("target-font-val");
