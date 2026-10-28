@@ -1,19 +1,8 @@
 /*
- * Sentinel @font-face:
- * Shadows any locally installed OS "Roboto" font.
- * When tech(incremental) is not supported by the browser engine, the Google Fonts
- * @font-face is dropped. This sentinel ensures "Roboto" remains registered as a web
- * font (with no printable glyphs in U+FFFE), forcing the browser to fall through
- * to the fallback font instead of using the local OS system font.
+ * The "Roboto" sentinel @font-face (which shadows any locally installed OS
+ * Roboto) lives in index.html as <style id="roboto-sentinel"> and is kept in
+ * sync with the selected Google Fonts endpoint by updateSentinel() in app.js.
  */
-@font-face {
-  font-family: "Roboto";
-  font-style: normal;
-  font-weight: 400;
-  font-stretch: 100%;
-  src: url("data:font/woff2;base64,");
-  unicode-range: U+FFFE;
-}
 
 /* Distinct fallback font: Comic Sans MS (system "cursive" font) */
 :root {

@@ -17,6 +17,33 @@
     />
 
     <link rel="stylesheet" href="styles.css" />
+
+    <!--
+      Sentinel @font-face: shadows any locally installed OS "Roboto" font.
+      When tech(incremental) is not supported, the Google Fonts @font-face is
+      dropped. This sentinel keeps "Roboto" registered as a web font (with no
+      printable glyphs, U+FFFE), forcing fallback to Comic Sans instead of the
+      local OS Roboto.
+
+      Its font-weight / font-stretch / font-style MUST exactly match the Google
+      Fonts @font-face. Faces with identical descriptors are merged into one
+      face and selected per character via unicode-range. Faces with different
+      descriptors compete during font matching instead: e.g. a "400" sentinel
+      ties with a "100 900" Google face for font-weight: 400, and Chrome may pick
+      the sentinel, rendering all weight-400 text in the fallback font.
+
+      app.js (updateSentinel) rewrites this to match the selected endpoint.
+    -->
+    <style id="roboto-sentinel">
+      @font-face {
+        font-family: "Roboto";
+        font-style: normal;
+        font-weight: 100 900;
+        font-stretch: 75% 100%;
+        src: url("data:font/woff2;base64,");
+        unicode-range: U+FFFE;
+      }
+    </style>
   </head>
   <body>
     <!-- Top Header -->

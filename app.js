@@ -233,9 +233,47 @@ function updateSample(index) {
   checkActiveFont();
 }
 
+// Returns the {weight, stretch} @font-face descriptors Google Fonts emits for a
+// css2 query such as "family=Roboto:wdth,wght@75..100,100..900". Defaults to
+// the static 400 / 100% face (e.g. for "family=Roboto").
+function sentinelDescriptorsForQuery(query) {
+  const descriptors = { weight: "400", stretch: "100%" };
+  const match = /family=[^:&]+:([a-z,]+)@([^&;]+)/i.exec(query);
+  if (!match) return descriptors;
+  const axes = match[1].split(",");
+  const values = match[2].split(",");
+  axes.forEach((axis, i) => {
+    const value = values[i];
+    if (value === undefined) return;
+    const [min, max] = value.split("..");
+    const range = max === undefined ? [min] : [min, max];
+    if (axis === "wght") descriptors.weight = range.join(" ");
+    if (axis === "wdth") descriptors.stretch = range.map((v) => `${v}%`).join(" ");
+  });
+  return descriptors;
+}
+
+// Keeps the sentinel @font-face descriptors identical to the Google Fonts
+// @font-face so they merge (see the comment on #roboto-sentinel in index.html).
+function updateSentinel(query) {
+  const style = document.getElementById("roboto-sentinel");
+  if (!style) return;
+  const { weight, stretch } = sentinelDescriptorsForQuery(query);
+  style.textContent = `
+      @font-face {
+        font-family: "Roboto";
+        font-style: normal;
+        font-weight: ${weight};
+        font-stretch: ${stretch};
+        src: url("data:font/woff2;base64,");
+        unicode-range: U+FFFE;
+      }`;
+}
+
 function updateStylesheetUrl() {
   const endpointSelect = document.getElementById("endpoint-select");
   const query = endpointSelect ? endpointSelect.value : "family=Roboto:wdth,wght@75..100,100..900";
+  updateSentinel(query);
   const link = document.getElementById("google-fonts-ift");
   const pillCode = document.getElementById("endpoint-pill-code");
   const targetVal = document.getElementById("target-font-val");
